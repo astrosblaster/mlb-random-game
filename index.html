@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLB Random Game</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f5;margin:0;color:#171717}
+header{background:#0b1f3a;color:white;padding:28px 20px;text-align:center}
+main{max-width:900px;margin:30px auto;padding:0 20px}
+.card{background:white;border-radius:14px;padding:24px;box-shadow:0 3px 14px #0001;margin-bottom:20px}
+button{background:#c8102e;color:white;border:0;border-radius:9px;padding:13px 20px;font-size:16px;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+select{padding:10px;border-radius:8px;border:1px solid #ccc;margin:5px}
+.game{display:none}
+.score{font-size:34px;font-weight:bold;text-align:center;margin:18px 0}
+.teams{text-align:center;font-size:21px}
+.meta{color:#555;line-height:1.7}
+a{color:#0b4ea2;font-weight:bold}
+.notice{background:#fff7d6;padding:14px;border-radius:9px}
+</style>
+</head>
+<body>
+<header><h1>⚾ MLB Random Game</h1><p>Pick a random game from baseball history.</p></header>
+<main>
+<div class="card">
+<h2>Find a Game</h2>
+<label>Era:
+<select id="era"><option value="all">Any Era</option><option value="modern">1901–present</option><option value="19th">19th Century</option></select>
+</label>
+<label>Game Type:
+<select id="type"><option value="all">Any Game</option><option value="regular">Regular Season</option><option value="postseason">Postseason</option><option value="world">World Series</option><option value="allstar">All-Star</option></select>
+</label>
+<br><br>
+<button onclick="randomGame()">Random Game</button>
+</div>
+
+<div class="card game" id="game">
+<div class="teams" id="teams"></div>
+<div class="score" id="score"></div>
+<div class="meta" id="meta"></div>
+<h2>Game Recap</h2>
+<p id="recap"></p>
+<p><a id="bref" target="_blank" rel="noopener">View game on Baseball-Reference →</a></p>
+</div>
+
+<div class="card">
+<div class="notice"><strong>Coming next:</strong> the demo will be replaced with the complete historical game database, with team, year, postseason, World Series, All-Star, extra-inning, one-run, and high-scoring filters.</div>
+</div>
+</main>
+<script>
+const games=[
+{year:2004,date:"October 18, 2004",a:"Boston Red Sox",h:"New York Yankees",as:10,hs:9,venue:"Yankee Stadium",innings:12,type:"postseason",bref:"https://www.baseball-reference.com/boxes/NYA/NYA200410180.shtml",recap:"Boston completed one of the greatest comebacks in postseason history, overcoming a three-games-to-none deficit to force a decisive Game 7."},
+{year:1975,date:"October 21, 1975",a:"Cincinnati Reds",h:"Boston Red Sox",as:7,hs:6,venue:"Fenway Park",innings:12,type:"world",bref:"https://www.baseball-reference.com/boxes/BOS/BOS197510210.shtml",recap:"Carlton Fisk's dramatic extra-inning home run in the bottom of the 12th made this one of the most famous games in World Series history."},
+{year:1956,date:"October 8, 1956",a:"Brooklyn Dodgers",h:"New York Yankees",as:0,hs:2,venue:"Yankee Stadium",innings:9,type:"world",bref:"https://www.baseball-reference.com/boxes/NYA/NYA195610080.shtml",recap:"Don Larsen threw the only perfect game in World Series history, retiring all 27 Brooklyn batters."},
+{year:1903,date:"October 1, 1903",a:"Pittsburgh Pirates",h:"Boston Americans",as:7,hs:3,venue:"Huntington Avenue Grounds",innings:9,type:"world",bref:"https://www.baseball-reference.com/boxes/BOS/BOS190310010.shtml",recap:"The first modern World Series began with Pittsburgh defeating Boston in Game 1."},
+{year:1871,date:"July 1, 1871",a:"Fort Wayne Kekiongas",h:"Cleveland Forest Citys",as:2,hs:0,venue:"Fort Wayne, Indiana",innings:9,type:"regular",bref:"https://www.baseball-reference.com/boxes/CLE/CLE187107010.shtml",recap:"An early professional baseball contest from the 19th century, illustrating how far the professional game has evolved."}
+];
+function randomGame(){
+ let era=document.getElementById("era").value,type=document.getElementById("type").value;
+ let pool=games.filter(g=>(era==="all"||(era==="modern"&&g.year>=1901)||(era==="19th"&&g.year<1901))&&(type==="all"||(type==="regular"&&g.type==="regular")||(type==="postseason"&&g.type==="postseason")||(type==="world"&&g.type==="world")||(type==="allstar"&&g.type==="allstar")));
+ if(!pool.length){alert("No demo games match those filters yet.");return}
+ let g=pool[Math.floor(Math.random()*pool.length)];
+ document.getElementById("game").style.display="block";
+ document.getElementById("teams").textContent=g.a+" @ "+g.h;
+ document.getElementById("score").textContent=g.as+" — "+g.hs;
+ document.getElementById("meta").innerHTML="<strong>Date:</strong> "+g.date+"<br><strong>Venue:</strong> "+g.venue+"<br><strong>Innings:</strong> "+g.innings+"<br><strong>Type:</strong> "+g.type;
+ document.getElementById("recap").textContent=g.recap;
+ document.getElementById("bref").href=g.bref;
+}
+</script>
+</body>
+</html>
