@@ -269,12 +269,15 @@ def write_decades(games):
     for g in games:
         decade = (int(g["d"][:3]) * 10)
         buckets[decade].append(g)
-    manifest = {"version": 1, "sourceUpdated": "Retrosheet", "decades": []}
+    manifest = {"version": 1, "sourceUpdated": "Retrosheet", "decades": [], "teams": {}}
     for decade in sorted(buckets):
         arr = sorted(buckets[decade], key=lambda x: (x["d"], x["n"], x["i"]))
         name = f"games-{decade}s.json"
         (DATA / name).write_text(json.dumps(arr, separators=(",", ":")), encoding="utf-8")
         years = sorted({int(x["d"][:4]) for x in arr})
+        for g in arr:
+            manifest["teams"][g["v"]] = g["vn"]
+            manifest["teams"][g["h"]] = g["hn"]
         manifest["decades"].append({"file": name, "from": years[0], "to": years[-1], "count": len(arr)})
     (DATA / "manifest.json").write_text(json.dumps(manifest, separators=(",", ":")), encoding="utf-8")
     total = sum(x["count"] for x in manifest["decades"])
