@@ -70,18 +70,16 @@ class TableParser(HTMLParser):
 def team_names():
     req = urllib.request.Request(URL_TEAM_CODES, headers={"User-Agent": "MLB-Random-Game/1.0"})
     html = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "replace")
-    p = TableParser()
-    p.feed(html)
+    from html import unescape
+    plain = unescape(re.sub(r"<[^>]+>", "\n", html))
     rows = []
-    for r in p.rows:
-        if len(r) >= 8 and re.fullmatch(r"[A-Z0-9]{3}", r[0]) and re.fullmatch(r"\d{4}", r[2]):
-            try:
-                rows.append({
-                    "id": r[0], "league": r[1], "start": int(r[2]), "end": int(r[3] or 9999),
-                    "city": r[4], "nick": r[5], "franchise": r[6]
-                })
-            except ValueError:
-                pass
+    pattern = re.compile(r"(?m)^\\s*([A-Z0-9]{3}),([A-Z]{2}),(\\d{4}),(\\d{4}|0),([^,\\r\\n]+),([^,\\r\\n]+),([^,\\r\\n]+),(\\d+)\\s*$")
+    for m in pattern.finditer(plain):
+        rows.append({
+            "id": m.group(1), "league": m.group(2), "start": int(m.group(3)),
+            "end": int(m.group(4) or 9999), "city": m.group(5).strip(),
+            "nick": m.group(6).strip(), "franchise": m.group(7).strip()
+        })
     def lookup(code, year):
         candidates = [x for x in rows if x["id"] == code and x["start"] <= year <= x["end"]]
         if candidates:
