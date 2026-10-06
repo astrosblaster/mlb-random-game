@@ -76,7 +76,7 @@ def team_names():
         if len(r) >= 8 and re.fullmatch(r"[A-Z0-9]{3}", r[0]) and re.fullmatch(r"\d{4}", r[2]):
             try:
                 rows.append({
-                    "id": r[0], "start": int(r[2]), "end": int(r[3] or 9999),
+                    "id": r[0], "league": r[1], "start": int(r[2]), "end": int(r[3] or 9999),
                     "city": r[4], "nick": r[5], "franchise": r[6]
                 })
             except ValueError:
@@ -87,7 +87,10 @@ def team_names():
             x = candidates[0]
             return (x["city"] + " " + x["nick"]).strip()
         return code
-    return lookup
+    def major(code, year):
+        candidates = [x for x in rows if x["id"] == code and x["start"] <= year <= x["end"]]
+        return bool(candidates and candidates[0]["league"] in {"NA","NL","AL","AA","UA","PL","FL"})
+    return lookup, major
 
 def park_names():
     p = {}
@@ -172,7 +175,7 @@ def make_record(gid, date, number, vis, home, site, vruns, hruns, innings, gamet
     }
     return rec
 
-def parse_old_logs(path, names, parks):
+def parse_old_logs(path, names, major, parks):
     out = []
     with zipfile.ZipFile(path) as z:
         for member in z.namelist():
@@ -204,6 +207,8 @@ def parse_old_logs(path, names, parks):
                     # Round up because a completed game can end after a partial inning.
                     actual_innings = max(1, int((int(outs) + 2) // 3)) if str(outs).isdigit() else 9
                     park = row[16] if len(row) > 16 else ""
+                    if not (major(vis, year) and major(home, year)):
+                        continue
                     rec = make_record(
                         f"{home}{date}{num}", date, num, vis, home, park, vr, hr,
                         actual_innings, "regular-season", parks, names
@@ -211,7 +216,7 @@ def parse_old_logs(path, names, parks):
                     out.append(rec)
     return out
 
-def parse_modern(gameinfo_zip, teamstats_zip, parks, names):
+def parse_modern(gameinfo_zip, teamstats_zip, parks, names, major):
     # First collect game-level information.
     games = {}
     f = read_zip_csv(gameinfo_zip, "gameinfo.csv")
@@ -221,6 +226,9 @@ def parse_modern(gameinfo_zip, teamstats_zip, parks, names):
             continue
         date = (r.get("date") or "").replace("/", "").replace("-", "")
         if len(date) != 8:
+            continue
+        year = int(date[:4])
+        if not (major(r.get("visteam") or "", year) and major(r.get("hometeam") or "", year)):
             continue
         games[gid] = {
             "gid": gid,
@@ -298,10 +306,10 @@ def main():
     download(URL_BIODATA, biodata_zip)
     download(URL_OLD_LOGS, old_zip)
 
-    names = team_names()
+    names, major = team_names()
     parks = park_names()
-    games = parse_modern(gameinfo_zip, teamstats_zip, parks, names)
-    old = parse_old_logs(old_zip, names, parks)
+    games = parse_modern(gameinfo_zip, teamstats_zip, parks, names, major)
+    old = parse_old_logs(old_zip, names, major, parks)
 
     # Keep the 1871-1896 portion from the game logs and the 1897+ portion from gameinfo.
     games.extend(old)
