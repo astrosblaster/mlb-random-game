@@ -39,7 +39,8 @@ def read_zip_csv(zip_path, filename):
         if not name:
             raise FileNotFoundError(filename)
         with z.open(name) as raw:
-            return io.TextIOWrapper(raw, encoding="utf-8-sig", errors="replace", newline="")
+            data = raw.read().decode("utf-8-sig", "replace")
+        return io.StringIO(data)
 
 class TableParser(HTMLParser):
     def __init__(self):
