@@ -71,9 +71,9 @@ def team_names():
     req = urllib.request.Request(URL_TEAM_CODES, headers={"User-Agent": "MLB-Random-Game/1.0"})
     html = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "replace")
     from html import unescape
-    plain = unescape(re.sub(r"<[^>]+>", "\n", html))
+    plain = unescape(re.sub(r"<[^>]+>", "", html))
     rows = []
-    pattern = re.compile(r"(?m)^\\s*([A-Z0-9]{3}),([A-Z]{2}),(\\d{4}),(\\d{4}|0),([^,\\r\\n]+),([^,\\r\\n]+),([^,\\r\\n]+),(\\d+)\\s*$")
+    pattern = re.compile(r"([A-Z0-9]{3}),([A-Z]{2}),(\\d{4}),(\\d{4}|0),([^,\\r\\n]+),([^,\\r\\n]+),([^,\\r\\n]+),(\\d+)")
     for m in pattern.finditer(plain):
         rows.append({
             "id": m.group(1), "league": m.group(2), "start": int(m.group(3)),
