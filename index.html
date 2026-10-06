@@ -5,69 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MLB Random Game</title>
 <style>
-body{font-family:Arial,sans-serif;background:#f4f4f5;margin:0;color:#171717}
-header{background:#0b1f3a;color:white;padding:28px 20px;text-align:center}
-main{max-width:900px;margin:30px auto;padding:0 20px}
-.card{background:white;border-radius:14px;padding:24px;box-shadow:0 3px 14px #0001;margin-bottom:20px}
-button{background:#c8102e;color:white;border:0;border-radius:9px;padding:13px 20px;font-size:16px;font-weight:bold;cursor:pointer}
-button:hover{opacity:.9}
-select{padding:10px;border-radius:8px;border:1px solid #ccc;margin:5px}
-.game{display:none}
-.score{font-size:34px;font-weight:bold;text-align:center;margin:18px 0}
-.teams{text-align:center;font-size:21px}
-.meta{color:#555;line-height:1.7}
-a{color:#0b4ea2;font-weight:bold}
-.notice{background:#fff7d6;padding:14px;border-radius:9px}
+:root{--navy:#0b1f3a;--red:#c8102e;--bg:#f4f4f5;--card:#fff;--muted:#5b6470}
+*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);margin:0;color:#171717}
+header{background:var(--navy);color:#fff;padding:32px 20px;text-align:center}header h1{margin:0 0 7px;font-size:34px}header p{margin:0;opacity:.9}
+main{max-width:1000px;margin:28px auto;padding:0 18px}.card{background:var(--card);border-radius:14px;padding:22px;box-shadow:0 3px 14px #0001;margin-bottom:20px}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px;color:#374151}
+select,input{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-size:15px}
+button{background:var(--red);color:#fff;border:0;border-radius:9px;padding:13px 20px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:16px}button:hover{filter:brightness(.93)}button:disabled{opacity:.55;cursor:wait}
+.status{margin-top:12px;color:var(--muted);font-size:14px}.game{display:none}.teams{text-align:center;font-size:23px;font-weight:bold}.score{text-align:center;font-size:42px;font-weight:800;margin:12px 0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;color:#444;margin-top:14px}.meta div{background:#f8fafc;padding:9px;border-radius:8px}
+.recap{font-size:17px;line-height:1.55}.links{margin-top:18px}a{color:#0b4ea2;font-weight:bold;text-decoration:none}a:hover{text-decoration:underline}
+.notice{background:#eef5ff;padding:13px;border-radius:9px;line-height:1.5}.small{font-size:13px;color:var(--muted);line-height:1.5}
+@media(max-width:600px){header h1{font-size:28px}.score{font-size:36px}}
 </style>
 </head>
 <body>
-<header><h1>⚾ MLB Random Game</h1><p>Pick a random game from baseball history.</p></header>
+<header><h1>⚾ MLB Random Game</h1><p>Discover a real game from major-league baseball history.</p></header>
 <main>
 <div class="card">
 <h2>Find a Game</h2>
-<label>Era:
-<select id="era"><option value="all">Any Era</option><option value="modern">1901–present</option><option value="19th">19th Century</option></select>
-</label>
-<label>Game Type:
-<select id="type"><option value="all">Any Game</option><option value="regular">Regular Season</option><option value="postseason">Postseason</option><option value="world">World Series</option><option value="allstar">All-Star</option></select>
-</label>
-<br><br>
-<button onclick="randomGame()">Random Game</button>
+<div class="filters">
+<div class="field"><label for="era">Era</label><select id="era"><option value="all">Any Era</option><option value="19">19th Century</option><option value="1900">1900–1949</option><option value="1950">1950–1999</option><option value="2000">2000–present</option></select></div>
+<div class="field"><label for="year">Year</label><select id="year"><option value="all">Any Year</option></select></div>
+<div class="field"><label for="team">Team</label><select id="team"><option value="all">Any Team</option></select></div>
+<div class="field"><label for="type">Game Type</label><select id="type"><option value="all">Any Game</option><option value="regular">Regular Season</option><option value="postseason">Postseason</option><option value="world">World Series</option><option value="allstar">All-Star</option></select></div>
+<div class="field"><label for="special">Special Filter</label><select id="special"><option value="all">Any Game</option><option value="extra">Extra Innings</option><option value="one">One-Run Game</option><option value="high">High Scoring (10+ runs)</option></select></div>
 </div>
-
+<button id="randomBtn" onclick="randomGame()">Random Game</button>
+<div class="status" id="status">Loading the historical database…</div>
+</div>
 <div class="card game" id="game">
 <div class="teams" id="teams"></div>
 <div class="score" id="score"></div>
 <div class="meta" id="meta"></div>
 <h2>Game Recap</h2>
-<p id="recap"></p>
-<p><a id="bref" target="_blank" rel="noopener">View game on Baseball-Reference →</a></p>
+<p class="recap" id="recap"></p>
+<div class="links"><a id="bref" target="_blank" rel="noopener">View this game on Baseball-Reference →</a></div>
 </div>
-
 <div class="card">
-<div class="notice"><strong>Coming next:</strong> the demo will be replaced with the complete historical game database, with team, year, postseason, World Series, All-Star, extra-inning, one-run, and high-scoring filters.</div>
+<div class="notice"><strong>Database coverage:</strong> the site is built from Retrosheet's historical game data and is automatically rebuilt from the current Retrosheet release. Baseball-Reference is used for the individual game links.</div>
+<p class="small">Retrosheet attribution: The information used here was obtained free of charge from and is copyrighted by Retrosheet. Interested parties may contact Retrosheet at "www.retrosheet.org".</p>
 </div>
 </main>
 <script>
-const games=[
-{year:2004,date:"October 18, 2004",a:"Boston Red Sox",h:"New York Yankees",as:10,hs:9,venue:"Yankee Stadium",innings:12,type:"postseason",bref:"https://www.baseball-reference.com/boxes/NYA/NYA200410180.shtml",recap:"Boston completed one of the greatest comebacks in postseason history, overcoming a three-games-to-none deficit to force a decisive Game 7."},
-{year:1975,date:"October 21, 1975",a:"Cincinnati Reds",h:"Boston Red Sox",as:7,hs:6,venue:"Fenway Park",innings:12,type:"world",bref:"https://www.baseball-reference.com/boxes/BOS/BOS197510210.shtml",recap:"Carlton Fisk's dramatic extra-inning home run in the bottom of the 12th made this one of the most famous games in World Series history."},
-{year:1956,date:"October 8, 1956",a:"Brooklyn Dodgers",h:"New York Yankees",as:0,hs:2,venue:"Yankee Stadium",innings:9,type:"world",bref:"https://www.baseball-reference.com/boxes/NYA/NYA195610080.shtml",recap:"Don Larsen threw the only perfect game in World Series history, retiring all 27 Brooklyn batters."},
-{year:1903,date:"October 1, 1903",a:"Pittsburgh Pirates",h:"Boston Americans",as:7,hs:3,venue:"Huntington Avenue Grounds",innings:9,type:"world",bref:"https://www.baseball-reference.com/boxes/BOS/BOS190310010.shtml",recap:"The first modern World Series began with Pittsburgh defeating Boston in Game 1."},
-{year:1871,date:"July 1, 1871",a:"Fort Wayne Kekiongas",h:"Cleveland Forest Citys",as:2,hs:0,venue:"Fort Wayne, Indiana",innings:9,type:"regular",bref:"https://www.baseball-reference.com/boxes/CLE/CLE187107010.shtml",recap:"An early professional baseball contest from the 19th century, illustrating how far the professional game has evolved."}
-];
-function randomGame(){
- let era=document.getElementById("era").value,type=document.getElementById("type").value;
- let pool=games.filter(g=>(era==="all"||(era==="modern"&&g.year>=1901)||(era==="19th"&&g.year<1901))&&(type==="all"||(type==="regular"&&g.type==="regular")||(type==="postseason"&&g.type==="postseason")||(type==="world"&&g.type==="world")||(type==="allstar"&&g.type==="allstar")));
- if(!pool.length){alert("No demo games match those filters yet.");return}
- let g=pool[Math.floor(Math.random()*pool.length)];
- document.getElementById("game").style.display="block";
- document.getElementById("teams").textContent=g.a+" @ "+g.h;
- document.getElementById("score").textContent=g.as+" — "+g.hs;
- document.getElementById("meta").innerHTML="<strong>Date:</strong> "+g.date+"<br><strong>Venue:</strong> "+g.venue+"<br><strong>Innings:</strong> "+g.innings+"<br><strong>Type:</strong> "+g.type;
- document.getElementById("recap").textContent=g.recap;
- document.getElementById("bref").href=g.bref;
+let manifest=null;
+const cache=new Map();
+async function loadManifest(){
+  const r=await fetch("data/manifest.json");
+  if(!r.ok) throw new Error("Database manifest could not be loaded.");
+  manifest=await r.json();
+  populateControls();
+  let total=manifest.decades.reduce(function(a,d){return a+d.count},0);
+  document.getElementById("status").textContent="Database ready — "+total.toLocaleString()+" games indexed.";
 }
+function populateControls(){
+  const team=document.getElementById("team");
+  Object.entries(manifest.teams).sort(function(a,b){return a[1].localeCompare(b[1])}).forEach(function(pair){
+    const o=document.createElement("option");o.value=pair[0];o.textContent=pair[1];team.appendChild(o);
+  });
+  const year=document.getElementById("year");
+  const min=Math.min.apply(null,manifest.decades.map(function(d){return d.from}));
+  const max=Math.max.apply(null,manifest.decades.map(function(d){return d.to}));
+  for(let y=max;y>=min;y--){const o=document.createElement("option");o.value=y;o.textContent=y;year.appendChild(o)}
+}
+async function loadDecade(d){
+  if(cache.has(d.file)) return cache.get(d.file);
+  const r=await fetch("data/"+d.file);
+  if(!r.ok) throw new Error("A game data file could not be loaded.");
+  const data=await r.json();cache.set(d.file,data);return data;
+}
+function selectedDecades(){
+  const era=document.getElementById("era").value;
+  const year=document.getElementById("year").value;
+  return manifest.decades.filter(function(d){
+    if(year!=="all" && !(+year>=d.from && +year<=d.to)) return false;
+    if(era==="19" && d.to>=1900) return false;
+    if(era==="1900" && (d.to<1900 || d.from>1949)) return false;
+    if(era==="1950" && (d.to<1950 || d.from>1999)) return false;
+    if(era==="2000" && d.to<2000) return false;
+    return true;
+  });
+}
+function matches(g){
+  const team=document.getElementById("team").value;
+  const year=document.getElementById("year").value;
+  const type=document.getElementById("type").value;
+  const special=document.getElementById("special").value;
+  if(team!=="all" && g.v!==team && g.h!==team)return false;
+  if(year!=="all" && +g.d.slice(0,4)!==+year)return false;
+  if(type!=="all" && g.t!==type)return false;
+  if(special==="extra" && !g.extra)return false;
+  if(special==="one" && !g.one)return false;
+  if(special==="high" && !g.high)return false;
+  return true;
+}
+function weightedDecade(ds){
+  const total=ds.reduce(function(a,d){return a+d.count},0);let n=Math.random()*total;
+  for(const d of ds){n-=d.count;if(n<0)return d}
+  return ds[ds.length-1];
+}
+async function randomGame(){
+  if(!manifest)return;
+  const btn=document.getElementById("randomBtn"),status=document.getElementById("status");
+  btn.disabled=true;status.textContent="Finding a game…";
+  try{
+    const ds=selectedDecades();
+    if(!ds.length) throw new Error("No games match the selected era/year.");
+    const activeTeam=document.getElementById("team").value!=="all";
+    const activeType=document.getElementById("type").value!=="all";
+    const activeSpecial=document.getElementById("special").value!=="all";
+    const activeYear=document.getElementById("year").value!=="all";
+    let pool=[];
+    if(!activeTeam && !activeType && !activeSpecial && !activeYear){
+      pool=await loadDecade(weightedDecade(ds));
+    }else{
+      const loaded=await Promise.all(ds.map(loadDecade));
+      pool=loaded.flat().filter(matches);
+    }
+    if(!pool.length) throw new Error("No games match all of those filters.");
+    showGame(pool[Math.floor(Math.random()*pool.length)]);
+    status.textContent="Found a match.";
+  }catch(e){alert(e.message);status.textContent=e.message}
+  finally{btn.disabled=false}
+}
+function showGame(g){
+  document.getElementById("game").style.display="block";
+  document.getElementById("teams").textContent=g.vn+" @ "+g.hn;
+  document.getElementById("score").textContent=g.vs+" — "+g.hs;
+  const typeName={regular:"Regular Season",postseason:"Postseason",world:"World Series",allstar:"All-Star",other:"Other"}[g.t]||g.rt;
+  document.getElementById("meta").innerHTML=
+    "<div><strong>Date</strong><br>"+formatDate(g.d)+(g.n?" (Game "+g.n+")":"")+"</div>"+
+    "<div><strong>Venue</strong><br>"+esc(g.p||"Unknown")+"</div>"+
+    "<div><strong>Innings</strong><br>"+g.inn+"</div>"+
+    "<div><strong>Type</strong><br>"+typeName+"</div>";
+  let recap=g.vn+" defeated "+g.hn+", "+g.vs+"–"+g.hs+", in "+g.inn+" innings.";
+  if(g.one) recap+=" It was decided by one run.";
+  if(g.extra) recap+=" The game went into extra innings.";
+  if(g.high) recap+=" The two teams combined for at least 10 runs.";
+  document.getElementById("recap").textContent=recap;
+  document.getElementById("bref").href=g.b;
+}
+function formatDate(s){return new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)).toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"})}
+function esc(s){return String(s).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]})}
+loadManifest().catch(function(e){document.getElementById("status").textContent=e.message});
 </script>
 </body>
 </html>
